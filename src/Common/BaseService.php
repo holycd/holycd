@@ -12,7 +12,7 @@ abstract class  BaseService
 {
     use CommonTraits;
 
-    protected function getKernel()
+    protected function getServiceKernel()
     {
         return ServiceKernel::getInstance();
     }

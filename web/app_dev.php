@@ -19,12 +19,12 @@ if (isset($_SERVER['HTTP_CLIENT_IP'])
 }
 
 /** @var \Composer\Autoload\ClassLoader $loader */
-$loader = require __DIR__.'/../app/autoload.php';
+$loader = require __DIR__.'/../app/autoload.php';//引入composer自动加载器
 Debug::enable();
 
 $kernel = new AppKernel('dev', true);
 $kernel->loadClassCache();
 $request = Request::createFromGlobals();
-$response = $kernel->handle($request);
+$response = $kernel->handle($request);//启动框架，处理加载类
 $response->send();
 $kernel->terminate($request, $response);

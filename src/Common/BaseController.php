@@ -14,8 +14,9 @@ abstract class BaseController extends Controller
 {
     use CommonTraits;
 
-    public function action()
+    protected function getServiceKernel()
     {
+        return ServiceKernel::instance();
     }
 
 }
