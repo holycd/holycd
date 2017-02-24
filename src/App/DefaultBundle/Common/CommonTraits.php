@@ -6,7 +6,7 @@
  * Time: 16:50
  */
 
-namespace Common;
+namespace App\DefaultBundle\Common;
 
 Trait CommonTraits
 {

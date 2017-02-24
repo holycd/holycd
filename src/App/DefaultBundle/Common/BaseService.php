@@ -6,15 +6,17 @@
  * Time: 16:22
  */
 
-namespace Common;
+namespace App\DefaultBundle\Common;
 
-abstract class  BaseService
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+
+abstract class BaseService extends Controller
 {
     use CommonTraits;
 
     protected function getServiceKernel()
     {
-        return ServiceKernel::getInstance();
+        return ServiceKernel::getInstance($this->container);
     }
 
     protected function dispatchEvent($eventName, $subject)

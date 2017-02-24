@@ -6,16 +6,11 @@
  * Time: 16:32
  */
 
-namespace Common;
+namespace App\DefaultBundle\Common;
 
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class ServiceKernel implements ContainerAwareInterface
+class ServiceKernel
 {
-    use ContainerAwareTrait;
-
     private static $_instance = NULL;
 
     private static $_dispatcher;
@@ -23,17 +18,21 @@ class ServiceKernel implements ContainerAwareInterface
     protected $environment;
     protected $debug;
     protected $booted;
+    protected $container;
 
     protected $parameterBag;
 
     protected $pool = array();
 
-    final public static function getInstance()
+    protected $classMaps = array();
+
+    final public static function getInstance($container)
     {
         if (!isset(self::$_instance) || !self::$_instance instanceof self) {
             self::$_instance = new self;
         }
-        self::$_instance->boot();
+        self::$_instance->boot($container);
+
         return self::$_instance;
     }
 
@@ -48,16 +47,19 @@ class ServiceKernel implements ContainerAwareInterface
 
     /**
      * 初始化部分数据
+     * @param null $container
      */
-    public function boot()
+    public function boot($container = null)
     {
         if (true === $this->booted) {
             return;
         }
         $this->booted = true;
 
-        $this->environment = $this->container->get( 'kernel' )->getEnvironment();
+        $this->container = $container;
 
+        $this->environment = $this->container->get( 'kernel' )->getEnvironment();
+//print_r($this->container->getParameterBag());exit();
         $this->setParameterBag($this->container->getParameterBag());
 
         if (in_array($this->environment, ['dev', 'test'], true)) {
@@ -65,6 +67,10 @@ class ServiceKernel implements ContainerAwareInterface
         }else{
             $this->debug = false;
         }
+        //这里可以直接对核心service做缓存(APP目录下)
+
+        //对各种订阅器做初始化
+
 /*
         $subscribers = empty($this->_moduleConfig['event_subscriber']) ? array() : $this->_moduleConfig['event_subscriber'];
         foreach ($subscribers as $subscriber) {
@@ -110,6 +116,8 @@ class ServiceKernel implements ContainerAwareInterface
 
     public function getService($name)
     {
+        //$this->getServiceKernel()->getService('Article.ArticleService');
+        //$this->getServiceKernel()->getService('Wap:Article.ArticleService');
         if (empty($this->pool[$name])) {//在pool池拿不到,遍历获取并实例化类,最后返回实例
             $class = $this->getClassName('service', $name);
 
@@ -118,44 +126,48 @@ class ServiceKernel implements ContainerAwareInterface
         return $this->pool[$name];
     }
 
-    protected function getClassName($type, $name)
-    {
-        //类映射
-        $classMap = $this->getClassMap($type);
+        protected function getClassName($type, $name)
+        {
+            //类映射
+            $classMap = $this->getClassMap($type);//默认的核心的service或dao 载入采用文件载入
 
-        if (isset($classMap[$name])) {
-            return $classMap[$name];
+            if (isset($classMap[$name])) {//核心Service下的 App目录下的
+                return $classMap[$name];
+            }
+
+            if (strpos($name, ':') > 0) {//其他目录的Service
+                list($namespace, $name) = explode(':', $name, 2);//切割name字符串,最多返回两个变量,如果多个，第二个开始合并
+                $namespace .= '\\Service';
+            } else {//默认目录 src/App/DefaultBundle/ 下
+                $namespace = substr(__NAMESPACE__, 0, -strlen('Common') - 1);//默认状态下
+            }
+
+            list($module, $className) = explode('.', $name);//字符串名切割 Article.ArticleService  Article模块的ArticleService类
+
+            $type = strtolower($type);
+            if ($type == 'dao') {
+                return $namespace . '\\' . $module . '\\Dao\\Impl\\' . $className . 'Impl';
+            }
+            return $namespace . '\\' . $module . '\\Impl\\' . $className . 'Impl';
         }
 
-        if (strpos($name, ':') > 0) {
-            list($namespace, $name) = explode(':', $name, 2);//切割name字符串,最多返回两个变量,如果多个，第二个开始合并
-            $namespace .= '\\Service';
-        } else {
-            $namespace = substr(__NAMESPACE__, 0, -strlen('Common') - 1);//默认状态下
-        }
-        list($module, $className) = explode('.', $name);//字符串名切割 App.AppSearch
+        protected function getClassMap($type)//获取类映射
+        {
+            if (isset($this->classMaps[$type])) {
+                return $this->classMaps[$type];
+            }
 
-        $type = strtolower($type);
-        if ($type == 'dao') {
-            return $namespace . '\\' . $module . '\\Dao\\Impl\\' . $className . 'Impl';
-        }
-        return $namespace . '\\' . $module . '\\Impl\\' . $className . 'Impl';
-    }
+            // edu 的 service 都是由parameters_service.yml 载入
+            $key = ($type == 'dao') ? 'kernel_daos' : 'kernel_services';
+            if (!$this->hasParameter($key)) {
+                $this->classMaps[$type] = array();
+            } else {
+                $this->classMaps[$type] = $this->getParameter($key);
+            }
 
-    protected function getClassMap($type)//获取类映射
-    {
-        if (isset($this->classMaps[$type])) {
             return $this->classMaps[$type];
         }
 
-        $key = ($type == 'dao') ? 'topxia_daos' : 'topxia_services';
-        if (!$this->hasParameter($key)) {
-            $this->classMaps[$type] = array();
-        } else {
-            $this->classMaps[$type] = $this->getParameter($key);
-        }
 
-        return $this->classMaps[$type];
-    }
 
 }

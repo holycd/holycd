@@ -6,7 +6,7 @@
  * Time: 16:18
  */
 
-namespace Common;
+namespace App\DefaultBundle\Common;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
@@ -16,7 +16,7 @@ abstract class BaseController extends Controller
 
     protected function getServiceKernel()
     {
-        return ServiceKernel::instance();
+        return ServiceKernel::getInstance($this->container);
     }
 
 }
