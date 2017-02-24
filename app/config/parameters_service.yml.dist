@@ -1,0 +1,6 @@
+parameters:
+    kernel_services:
+        'Article.ArticleService': 'App\\DefaultBundle\\Service\\Article'
+
+
+    kernel_daos:

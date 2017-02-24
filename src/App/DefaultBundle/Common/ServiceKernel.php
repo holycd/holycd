@@ -162,7 +162,7 @@ class ServiceKernel
             if (!$this->hasParameter($key)) {
                 $this->classMaps[$type] = array();
             } else {
-                $this->classMaps[$type] = $this->getParameter($key);
+                $this->classMaps[$type] = $this->getParameter($key);//采用懒加载
             }
 
             return $this->classMaps[$type];
