@@ -6,10 +6,10 @@
  * Time: 15:02
  */
 
-namespace App\DefaultBundle\Service\Article;
+namespace App\Service\Article;
 
 
-interface ArticleServiceInterface
+interface ArticleService
 {
     public function getArticle($id);
 

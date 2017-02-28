@@ -6,36 +6,37 @@
  * Time: 16:32
  */
 
-namespace App\DefaultBundle\Common;
+namespace App\Common;
 
 
 class ServiceKernel
 {
     private static $_instance = NULL;
 
-    private static $_dispatcher;
+    private static  $_dispatcher; //派遣器实例
 
-    protected $environment;
+    protected $environment; //环境
     protected $debug;
     protected $booted;
-    protected $container;
+    protected $container; //容器
 
     protected $parameterBag;
 
-    protected $pool = array();
+    protected $pool = array();//类池
 
     protected $classMaps = array();
 
-    final public static function getInstance($container)
+    final public static function getInstance($container = null)
     {
         if (!isset(self::$_instance) || !self::$_instance instanceof self) {
             self::$_instance = new self;
         }
+
         self::$_instance->boot($container);
 
         return self::$_instance;
     }
-
+/*
     public static function instance()
     {
         if (empty(self::$_instance)) {
@@ -44,6 +45,7 @@ class ServiceKernel
         //self::$_instance->boot();
         return self::$_instance;
     }
+*/
 
     /**
      * 初始化部分数据
@@ -69,8 +71,9 @@ class ServiceKernel
         }
         //这里可以直接对核心service做缓存(APP目录下)
 
+        //
+        //$this->_dispatcher = $this->container->get('event_dispatcher');//获取系统的event_dispatcher派遣器
         //对各种订阅器做初始化
-
 /*
         $subscribers = empty($this->_moduleConfig['event_subscriber']) ? array() : $this->_moduleConfig['event_subscriber'];
         foreach ($subscribers as $subscriber) {
@@ -100,74 +103,87 @@ class ServiceKernel
         }
         return $this->parameterBag->has($name);
     }
-/*
-    public function getDao($name)
+
+    public function createDao($name)
     {
         if (empty($this->pool[$name])) {
             $class = $this->getClassName('dao', $name);
-            $dao = new $class();
-            $dao->setConnection($this->getConnection());
+            $dao = new $class($this->container);
             $this->pool[$name] = $dao;
         }
         return $this->pool[$name];
     }
-*/
 
 
-    public function getService($name)
+
+    public function createService($name)
     {
         //$this->getServiceKernel()->getService('Article.ArticleService');
         //$this->getServiceKernel()->getService('Wap:Article.ArticleService');
-        if (empty($this->pool[$name])) {//在pool池拿不到,遍历获取并实例化类,最后返回实例
-            $class = $this->getClassName('service', $name);
 
-            $this->pool[$name] = new $class();
+        if (empty($this->pool[$name])) {//在pool池拿不到,遍历获取并实例化类,最后返回实例
+
+            $class = $this->getClassName('service', $name);
+            $this->pool[$name] = new $class($this->container);
         }
+
         return $this->pool[$name];
     }
 
-        protected function getClassName($type, $name)
-        {
-            //类映射
-            $classMap = $this->getClassMap($type);//默认的核心的service或dao 载入采用文件载入
+    protected function getClassName($type, $name)
+    {
+        //类映射
+        $classMap = $this->getClassMap($type);//默认的核心的service或dao 载入采用文件载入
 
-            if (isset($classMap[$name])) {//核心Service下的 App目录下的
-                return $classMap[$name];
-            }
-
-            if (strpos($name, ':') > 0) {//其他目录的Service
-                list($namespace, $name) = explode(':', $name, 2);//切割name字符串,最多返回两个变量,如果多个，第二个开始合并
-                $namespace .= '\\Service';
-            } else {//默认目录 src/App/DefaultBundle/ 下
-                $namespace = substr(__NAMESPACE__, 0, -strlen('Common') - 1);//默认状态下
-            }
-
-            list($module, $className) = explode('.', $name);//字符串名切割 Article.ArticleService  Article模块的ArticleService类
-
-            $type = strtolower($type);
-            if ($type == 'dao') {
-                return $namespace . '\\' . $module . '\\Dao\\Impl\\' . $className . 'Impl';
-            }
-            return $namespace . '\\' . $module . '\\Impl\\' . $className . 'Impl';
+        if (isset($classMap[$name])) {//核心Service下的 App目录下的
+            return $classMap[$name];
         }
 
-        protected function getClassMap($type)//获取类映射
-        {
-            if (isset($this->classMaps[$type])) {
-                return $this->classMaps[$type];
-            }
+        if (strpos($name, ':') > 0) {//其他目录的Service
+            list($namespace, $name) = explode(':', $name, 2);//切割name字符串,最多返回两个变量,如果多个，第二个开始合并
+        } else {//默认目录 src/App/ 下
+            $namespace = substr(__NAMESPACE__, 0, -strlen('Common') - 1);//默认状态下
+        }
+        $namespace .= '\\Service';
 
-            // edu 的 service 都是由parameters_service.yml 载入
-            $key = ($type == 'dao') ? 'kernel_daos' : 'kernel_services';
-            if (!$this->hasParameter($key)) {
-                $this->classMaps[$type] = array();
-            } else {
-                $this->classMaps[$type] = $this->getParameter($key);//采用懒加载
-            }
+        list($module, $className) = explode('.', $name);//字符串名切割 Article.ArticleService  Article模块的ArticleService类
 
+        $type = strtolower($type);
+        if ($type == 'dao') {
+            return $namespace . '\\' . $module . '\\Dao\\Impl\\' . $className . 'Impl';
+        }
+        return $namespace . '\\' . $module . '\\Impl\\' . $className . 'Impl';
+    }
+
+    protected function getClassMap($type)//获取类映射
+    {
+        if (isset($this->classMaps[$type])) {
             return $this->classMaps[$type];
         }
 
+        // edu 的 service 都是由parameters_service.yml 载入
+        $key = ($type == 'dao') ? 'kernel_daos' : 'kernel_services';
+        if (!$this->hasParameter($key)) {
+            $this->classMaps[$type] = array();
+        } else {
+            $this->classMaps[$type] = $this->getParameter($key);//采用懒加载
+        }
+
+        return $this->classMaps[$type];
+    }
+
+    public static function dispatcher()
+    {
+        if (self::$_dispatcher) {
+            return self::$_dispatcher;
+        }
+/*        if(empty(self::$_instance)){
+            self::getInstance($container);//初始化
+        }*/
+        self::$_dispatcher = new EventDispatcher();
+
+        return self::$_dispatcher;
+    }
 
 
 }

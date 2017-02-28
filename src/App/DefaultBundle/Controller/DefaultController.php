@@ -1,7 +1,7 @@
 <?php
 
 namespace App\DefaultBundle\Controller;
-use App\DefaultBundle\Common\BaseController;
+use App\Common\BaseController;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 
 class DefaultController extends BaseController
@@ -11,7 +11,8 @@ class DefaultController extends BaseController
      */
     public function indexAction()
     {
-        $this->getServiceKernel()->getService('Article.ArticleService');
+        $this->getService('Article.ArticleService')->getArticle(5);
+//        $this->getDao('Article.ArticleDao')->dealArticle();
         return $this->render('default/index.html.twig',[
         'base_dir' => realpath($this->getParameter('kernel.root_dir').'/..').DIRECTORY_SEPARATOR,
         ]);
