@@ -1,0 +1,12 @@
+app_web_default:
+    path:     /
+    defaults: { _controller: AppWebBundle:Default:default }
+
+
+################# 地区路由 #######################
+app_web_area:
+    resource: "@AppWebBundle/Resources/config/routing.yml"
+    prefix:   /{areaCode}
+    defaults: { areaCode: hb }
+    requirements:
+        areaCode: "%areaCodeStr%"

@@ -1,3 +1,14 @@
+app_web_noarea:
+    resource: "@AppWebBundle/Resources/config/routing_common.yml"
+    prefix:   /
+
+#app_web_area:
+#    resource: "@AppWebBundle/Resources/config/routing.yml"
+#    prefix:   /{areaCode}
+#    defaults: { areaCode: hb }
+#    requirements:
+#        areaCode: "%areaCodeStr%"
+
 app_default:
     resource: "@AppDefaultBundle/Controller/"
     type:     annotation
