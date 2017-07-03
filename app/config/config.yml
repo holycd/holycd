@@ -69,3 +69,39 @@ swiftmailer:
     username:  "%mailer_user%"
     password:  "%mailer_password%"
     spool:     { type: memory }
+
+knp_paginator:
+    page_range: 5                      # default page range used in pagination control
+    default_options:
+        page_name: page                # page query parameter name
+        sort_field_name: sort          # sort field query parameter name
+        sort_direction_name: direction # sort direction query parameter name
+        distinct: true                 # ensure distinct results, useful when ORM queries are using GROUP BY statements
+    template:
+        pagination: common/twitter_bootstrap_v3_pagination.html.twig
+
+
+#snc_redis:
+#    #http://olegpuzanov.com/2015/02/01/using-redis-for-doctrine-caching-in-symfony2/
+                                 #    # configure predis as client
+#    clients:
+#        default:
+#            type: "%redis_type%"
+#            alias: "%redis_alias%"
+#            dsn: "redis://%redis_dsn%"
+#        doctrine:
+#            type: predis
+#            alias: doctrine
+#            dsn: redis://localhost
+    # configure doctrine caching
+#    doctrine:
+#        metadata_cache:
+#            client: doctrine
+#            entity_manager: default
+#            document_manager: default
+#        result_cache:
+#            client: doctrine
+#            entity_manager: [default]
+#        query_cache:
+#            client: doctrine
+#            entity_manager: default

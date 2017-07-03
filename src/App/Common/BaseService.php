@@ -14,6 +14,15 @@ abstract class BaseService extends Controller
 {
     use CommonTraits;
 
+    public $container;
+
+    public function __construct($container = null)
+    {
+        if($container){
+            $this->container = $container;
+        }
+    }
+
     public function getService($name)
     {
         return ServiceKernel::getInstance($this->container)->createService($name);
@@ -23,6 +32,23 @@ abstract class BaseService extends Controller
     {
         return ServiceKernel::getInstance($this->container)->createDao($name);
     }
+
+    /**
+     * Shortcut to return the Doctrine Registry service.
+     *
+     * @return Registry
+     *
+     * @throws \LogicException If DoctrineBundle is not available
+     */
+    protected function getDoctrine()
+    {
+        if (!$this->container->has('doctrine')) {
+            throw new \LogicException('The DoctrineBundle is not registered in your application.');
+        }
+
+        return $this->container->get('doctrine');
+    }
+
 
     public function getDispatcher()
     {

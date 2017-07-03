@@ -8,9 +8,7 @@
 
 namespace App\Common;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-
-abstract class BaseDao extends Controller
+abstract class BaseDao
 {
     use CommonTraits;
 
